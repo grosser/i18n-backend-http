@@ -50,7 +50,7 @@ module I18n
 
       def translations(locale)
         @translations[locale] ||= (
-        translations_from_cache(locale) ||
+          translations_from_cache(locale) ||
           download_and_cache_translations(locale)
         )
       end
@@ -92,16 +92,14 @@ module I18n
       end
 
       def download_and_cache_translations(locale)
-        begin
-          @http_client.download(path(locale)) do |result|
-            translations = parse_response(result)
-            @options[:cache].write(cache_key(locale), translations)
-            @translations[locale] = translations
-          end
-        rescue => e
-          @options[:exception_handler].call(e)
-          @translations[locale] = {} # do not write distributed cache
+        @http_client.download(path(locale)) do |result|
+          translations = parse_response(result)
+          @options[:cache].write(cache_key(locale), translations)
+          @translations[locale] = translations
         end
+      rescue => e
+        @options[:exception_handler].call(e)
+        @translations[locale] = {} # do not write distributed cache
       end
 
       def parse_response(body)
