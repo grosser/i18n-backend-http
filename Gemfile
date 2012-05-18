@@ -2,4 +2,10 @@ source :rubygems
 gemspec
 
 gem 'rake'
-gem 'rspec', '~>2'
+gem 'shoulda'
+gem 'vcr'
+gem 'webmock'
+gem 'mocha'
+gem 'appraisal'
+gem 'mynyml-redgreen'
+gem 'json'

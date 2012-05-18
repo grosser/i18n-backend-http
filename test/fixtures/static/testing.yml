@@ -1,0 +1,15 @@
+title: "Testing"
+
+parts:
+  - translation:
+      key: "txt.modal.welcome.browsers.best_support"
+      title: "Some title"
+      value: "The best"
+  - translation:
+      key: "txt.not.in.api.best_support"
+      title: "Some title"
+      value: "The best"
+  - translation:
+      keys: ['type.not.in.api.question', 'type.not.in.api.incident', 'type.not.in.api.problem', 'type.not.in.api.task']
+      title: "Ticket type values"
+      values: ["Question", "Incident", "Problem", "Task"]

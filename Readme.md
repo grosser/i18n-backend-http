@@ -12,6 +12,11 @@ Usage
 =====
     CODE EXAMPLE
 
+TODO
+====
+ - available_locales
+ - what happens on `reload` ?
+
 Author
 ======
 [Michael Grosser](http://grosser.it)<br/>

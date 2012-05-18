@@ -1,5 +1,5 @@
 PATH
-  remote: .
+  remote: /Users/mgrosser/code/tools/i18n-backend-http
   specs:
     i18n-backend-http (0.0.1)
       faraday
@@ -14,12 +14,10 @@ GEM
       bundler
       rake
     crack (0.3.1)
-    faraday (0.7.6)
-      addressable (~> 2.2)
+    faraday (0.8.0)
       multipart-post (~> 1.1)
-      rack (~> 1.1)
     gem_of_thrones (0.2.1)
-    i18n (0.6.0)
+    i18n (0.4.2)
     json (1.7.1)
     metaclass (0.0.1)
     mocha (0.11.4)
@@ -27,8 +25,7 @@ GEM
     multipart-post (1.1.5)
     mynyml-redgreen (0.7.1)
       term-ansicolor (>= 1.0.4)
-    rack (1.4.1)
-    rake (0.9.2)
+    rake (0.9.2.2)
     shoulda (3.0.1)
       shoulda-context (~> 1.0.0)
       shoulda-matchers (~> 1.0.0)
@@ -36,7 +33,7 @@ GEM
     shoulda-matchers (1.0.0)
     term-ansicolor (1.0.7)
     vcr (2.1.1)
-    webmock (1.8.6)
+    webmock (1.8.7)
       addressable (>= 2.2.7)
       crack (>= 0.1.7)
 
@@ -45,6 +42,7 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal
+  i18n (~> 0.4.0)
   i18n-backend-http!
   json
   mocha

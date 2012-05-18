@@ -1,14 +1,22 @@
+require 'appraisal'
 require 'bundler/gem_tasks'
 
 task :default do
-  sh "rspec spec/"
+  sh "bundle exec rake appraisal:install && bundle exec rake appraisal test"
+end
+
+require 'rake/testtask'
+Rake::TestTask.new(:test) do |test|
+  test.libs << 'lib'
+  test.pattern = 'test/**/*_test.rb'
+  test.verbose = true
 end
 
 # extracted from https://github.com/grosser/project_template
 rule /^version:bump:.*/ do |t|
   sh "git status | grep 'nothing to commit'" # ensure we are not dirty
   index = ['major', 'minor','patch'].index(t.name.split(':').last)
-  file = 'lib/i18n_backend_http/version.rb'
+  file = 'lib/i18n/backend/http/version.rb'
 
   version_file = File.read(file)
   old_version, *version_parts = version_file.match(/(\d+)\.(\d+)\.(\d+)/).to_a

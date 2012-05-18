@@ -1,0 +1,47 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://support.zendesk.com/api/v2/locales/888888888.json?include=translations
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept:
+      - ! '*/*'
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Server:
+      - nginx/1.0.15
+      Date:
+      - Tue, 08 May 2012 00:29:04 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Connection:
+      - keep-alive
+      Status:
+      - 404 Not Found
+      Content-Length:
+      - '103'
+      Set-Cookie:
+      - _zendesk_apps_session=e30%3D%0A; path=/; HttpOnly
+      - _zendesk_session=BAh7CToMYWNjb3VudGkGOg9zZXNzaW9uX2lkIiU0NWZiNjEwMmIxMzQwMzZjOWI5YmQwN2I3YTIwYTA5OSITd2FyZGVuLm1lc3NhZ2V7ADoHaWQiFDU2N20zZGxucWxzMGdueQ%3D%3D--a41f37e8ddbadc9899f716742c5044c7891558c1;
+        path=/; HttpOnly
+      - _zendesk_shared_session=eyJhY2NvdW50IjoxfQ%3D%3D%0A--275b347acad95a1899aa3429e7a023b50d8e7f95;
+        path=/; HttpOnly
+      X-Zendesk-Api-Version:
+      - v2
+      Cache-Control:
+      - no-cache
+    body:
+      encoding: US-ASCII
+      string: ! '{"error":"RecordNotFound","description":"Not found: Couldn''t find
+        TranslationLocale with ID=888888888"}'
+    http_version: 
+  recorded_at: Tue, 08 May 2012 00:29:04 GMT
+recorded_with: VCR 2.1.1
