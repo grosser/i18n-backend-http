@@ -3,11 +3,10 @@ Very few request, always up to date + fast.
 
 Install
 =======
+
     gem install i18n_backend_http
 Or
-
     rails plugin install git://github.com/grosser/i18n-backend-http.git
-
 
 Usage
 =====
@@ -21,7 +20,7 @@ class MyBackend < I18n::Backend::Http
       :http_open_timeout => 5, # default: 1
       :http_read_timeout => 5, # default: 1
       # :exception_handler => lambda{|e| Rails.logger.error e },
-      # :memory_cache_size => ??, # default: 10
+      # :memory_cache_size => ??, # default: 10 locales
     }.merge(options))
   end
 
@@ -59,10 +58,21 @@ To handle http exceptions provide e.g. `:exception_handler => lambda{|e| puts e 
 ### Limited memory cache
 The backend stores the 10 LRU entries in memory, if you want to mess with this `:memory_cache_size => 100`
 
+### Fallback
+If the http backend is down, it does not translate, but also does not constantly try to query -> your app is untranslated but not down.</br>
+You should either use :default for all I18n.t or use a Chain, so when http is down e.g. english is used.
+
+```Ruby
+I18n.backend = I18n::Backend::Chain.new(
+  MyBackend.new(options),
+  I18n::Backend::Simple.new
+)
+```
+
 TODO
 ====
- - available_locales
- - what happens on `reload` ?
+ - available_locales is not implemented, since we did not need it
+ - `reload` -> all caches should be cleared
 
 Author
 ======
