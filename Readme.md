@@ -6,6 +6,7 @@ Install
 
     gem install i18n_backend_http
 Or
+
     rails plugin install git://github.com/grosser/i18n-backend-http.git
 
 Usage
@@ -34,6 +35,7 @@ class MyBackend < I18n::Backend::Http
 end
 
 I18n.backend = MyBackend.new
+```
 
 ### Polling
 Tries to update all used translations every 10 minutes (using ETag and :cache), can be stopped via `I18n.backend.stop_polling`.<br/>
@@ -50,13 +52,13 @@ I18n.t('some.key') == "New value"
 ### :cache
 If you pass `:cache => Rails.cache`, translations will be loaded from cache and updated in the cache.<br/>
 The cache **MUST** support :unless_exist, so [gem_of_thrones](https://github.com/grosser/gem_of_thrones) can do its job,<br/>
-MemCacheStore + LibMemCacheStore ActiveSupport::Cache::MemoryStore (edge) are fine.
+MemCacheStore + LibMemCacheStore + ActiveSupport::Cache::MemoryStore (edge) work.
 
 ### Exceptions
 To handle http exceptions provide e.g. `:exception_handler => lambda{|e| puts e }` (prints to stderr by default).
 
 ### Limited memory cache
-The backend stores the 10 LRU entries in memory, if you want to mess with this `:memory_cache_size => 100`
+The backend stores the 10 least recently used locales in memory, if you want to mess with this `:memory_cache_size => 100`
 
 ### Fallback
 If the http backend is down, it does not translate, but also does not constantly try to query -> your app is untranslated but not down.</br>
