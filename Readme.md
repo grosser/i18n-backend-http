@@ -4,7 +4,7 @@ Very few request, always up to date + fast.
 Install
 =======
 
-    gem install i18n_backend_http
+    gem install i18n-backend-http
 Or
 
     rails plugin install git://github.com/grosser/i18n-backend-http.git
