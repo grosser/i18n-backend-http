@@ -45,7 +45,7 @@ module I18n
 
       def lookup(locale, key, scope = [], options = {})
         key = ::I18n.normalize_keys(locale, key, scope, options[:separator])[1..-1].join('.')
-        translations(locale)[key]
+        lookup_key translations(locale), key
       end
 
       def translations(locale)
@@ -108,6 +108,11 @@ module I18n
 
       def path(locale)
         raise "implement path"
+      end
+
+      # hook for extension with other resolution method
+      def lookup_key(translations, key)
+        translations[key]
       end
     end
   end
