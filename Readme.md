@@ -52,7 +52,7 @@ I18n.t('some.key') == "New value"
 ### :cache
 If you pass `:cache => Rails.cache`, translations will be loaded from cache and updated in the cache.<br/>
 The cache **MUST** support :unless_exist, so [gem_of_thrones](https://github.com/grosser/gem_of_thrones) can do its job,<br/>
-MemCacheStore + LibMemCacheStore + ActiveSupport::Cache::MemoryStore (edge) work.
+MemCacheStore + LibmemcachedStore + ActiveSupport::Cache::MemoryStore (edge) work.
 
 ### Exceptions
 To handle http exceptions provide e.g. `:exception_handler => lambda{|e| puts e }` (prints to stderr by default).
