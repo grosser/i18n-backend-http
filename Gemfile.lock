@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    i18n-backend-http (0.1.1)
+    i18n-backend-http (0.1.2)
       faraday
       gem_of_thrones
       i18n
