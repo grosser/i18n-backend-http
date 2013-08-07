@@ -7,7 +7,7 @@ PATH
       i18n
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     addressable (2.2.8)
     appraisal (0.4.1)
@@ -32,7 +32,7 @@ GEM
     shoulda-context (1.0.0)
     shoulda-matchers (1.0.0)
     term-ansicolor (1.0.7)
-    vcr (2.1.1)
+    vcr (2.5.0)
     webmock (1.8.6)
       addressable (>= 2.2.7)
       crack (>= 0.1.7)
@@ -48,5 +48,5 @@ DEPENDENCIES
   mynyml-redgreen
   rake
   shoulda
-  vcr
+  vcr (~> 2.5)
   webmock
