@@ -7,7 +7,7 @@ Gem::Specification.new(name, I18n::Backend::Http::VERSION) do |s|
   s.authors = ["Michael Grosser"]
   s.email = "michael@grosser.it"
   s.homepage = "http://github.com/grosser/#{name}"
-  s.files = `git ls-files`.split("\n")
+  s.files = `git ls-files lib`.split("\n")
   s.license = 'MIT'
   s.add_runtime_dependency "i18n"
   s.add_runtime_dependency "gem_of_thrones"
