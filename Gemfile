@@ -2,10 +2,10 @@ source "https://rubygems.org"
 gemspec
 
 gem 'rake'
-gem 'shoulda'
+gem 'minitest', '~> 4.1'
+gem 'minitest-rg'
 gem 'vcr', '~> 2.5'
 gem 'webmock'
 gem 'mocha'
 gem 'appraisal'
-gem 'mynyml-redgreen'
 gem 'json'

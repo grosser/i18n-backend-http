@@ -1,11 +1,9 @@
-require 'bundler'
-Bundler.setup
-
-require 'test/unit'
-require 'shoulda'
+require 'bundler/setup'
+require 'minitest/spec'
+require 'minitest/rg'
+require 'minitest/autorun'
 require 'mocha'
 require 'vcr'
-require 'redgreen'
 
 VCR.configure do |c|
   c.cassette_library_dir = 'test/fixtures/vcr'

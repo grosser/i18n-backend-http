@@ -1,7 +1,7 @@
 # encoding: UTF-8
 require File.expand_path('../../../test_helper', __FILE__)
 
-class I18nBackendHttpTest < Test::Unit::TestCase
+describe I18n::Backend::Http do
   class SimpleCache
     def initialize
       @cache = {}
@@ -72,42 +72,42 @@ class I18nBackendHttpTest < Test::Unit::TestCase
     I18n.backend.send(:update_caches)
   end
 
-  context "I18n::Backend::Http" do
-    setup do
+  describe "I18n::Backend::Http" do
+    before do
       @existing_key = "txt.modal.welcome.browsers.best_support"
       @missing_key = "txt.blublublub"
       Thread.list.each {|thread| thread.exit unless thread == Thread.current } # stop all polling threads
     end
 
-    teardown do
+    after do
       I18n.backend && I18n.backend.respond_to?(:stop_polling) && I18n.backend.stop_polling
     end
 
-    context "#translate" do
-      setup do
+    describe "#translate" do
+      before do
         I18n.locale = "de_DE-x-8"
         I18n.backend = ZenEnd.new
       end
 
-      should "translate via api" do
+      it "translate via api" do
         with_local_available do
           assert_equal "Am besten", I18n.t(@existing_key)
         end
       end
 
-      should "translate via api and :scope" do
+      it "translate via api and :scope" do
         with_local_available do
           assert_equal "Am besten", I18n.t("browsers.best_support", :scope => "txt.modal.welcome")
         end
       end
 
-      should "translate via :default" do
+      it "translate via :default" do
         with_local_available do
           assert_equal "XXX", I18n.t("txt.blublublub", :default => "XXX")
         end
       end
 
-      should "caches the locale" do
+      it "caches the locale" do
         with_local_available do
           assert_equal "Am besten", I18n.t(@existing_key)
           JSON.expects(:load).never
@@ -115,13 +115,13 @@ class I18nBackendHttpTest < Test::Unit::TestCase
         end
       end
 
-      should "fail when key is unknown" do
+      it "fail when key is unknown" do
         with_local_available do
           assert_equal "translation missing: de_DE-x-8.#{@missing_key}", I18n.t(@missing_key).gsub(', ', '.')
         end
       end
 
-      should "fail when I mess up the host" do
+      it "fail when I mess up the host" do
         silence_backend
         I18n.backend = ZenEnd.new(:host => "https://MUAHAHAHAHA.com")
         VCR.use_cassette("invalid_host") do
@@ -129,14 +129,14 @@ class I18nBackendHttpTest < Test::Unit::TestCase
         end
       end
 
-      should "fail with invalid locale" do
+      it "fail with invalid locale" do
         silence_backend
         with_error do
           assert_equal "translation missing: #{I18n.locale}.#{@existing_key}", I18n.t(@existing_key).gsub(', ', '.')
         end
       end
 
-      should "call :exception_handler when error occurs" do
+      it "call :exception_handler when error occurs" do
         exception = nil
         I18n.backend = ZenEnd.new(:exception_handler => lambda{|e|
           exception = e
@@ -150,7 +150,7 @@ class I18nBackendHttpTest < Test::Unit::TestCase
         assert_equal exception.class, RuntimeError
       end
 
-      should "keep :memory_cache_size items in memory cache" do
+      it "keep :memory_cache_size items in memory cache" do
         I18n.backend = ZenEnd.new(:memory_cache_size => 1)
 
         VCR.use_cassette("multiple_locales") do
@@ -167,31 +167,31 @@ class I18nBackendHttpTest < Test::Unit::TestCase
       end
 
       # FIXME how to simulate http timeouts !?
-      #should "fails when api is slower then set timeout" do
+      #it "fails when api is slower then set timeout" do
       #  Timeout.timeout 0.8 do
       #    assert_equal "translation missing: de_DE-x-8.#{@missing_key}", I18n.t(@missing_key).gsub(', ', '.')
       #  end
       #end
 
-      context "with cache" do
-        setup do
+      describe "with cache" do
+        before do
           @cache = SimpleCache.new
           I18n.backend = ZenEnd.new(:cache => @cache)
         end
 
-        should "loads translations from cache" do
+        it "loads translations from cache" do
           @cache.write "i18n/backend/http/translations/8", {"foo" => "bar"}
           assert_equal "bar", I18n.t("foo")
         end
 
-        should "downloads translations on cache miss" do
+        it "downloads translations on cache miss" do
           with_local_available do
             assert_equal "Am besten", I18n.t(@existing_key)
           end
           assert @cache.read("i18n/backend/http/translations/8")
         end
 
-        should "not store invalid responses in cache" do
+        it "not store invalid responses in cache" do
           silence_backend
           with_error do
             assert_equal "translation missing: #{I18n.locale}.#{@existing_key}", I18n.t(@existing_key).gsub(', ', '.')
@@ -199,7 +199,7 @@ class I18nBackendHttpTest < Test::Unit::TestCase
           assert !@cache.read("i18n/backend/http/translations/#{I18n.locale.to_s[/\d+/]}")
         end
 
-        should "use the memory cache before the cache" do
+        it "use the memory cache before the cache" do
           @cache.write "i18n/backend/http/translations/8", {"foo" => "bar"}
           assert_equal "bar", I18n.t("foo")
           @cache.write "i18n/backend/http/translations/8", {"foo" => "baZZZ"}
@@ -208,8 +208,8 @@ class I18nBackendHttpTest < Test::Unit::TestCase
       end
     end
 
-    context "#start_polling" do
-      should "not start polling when poll => false is given" do
+    describe "#start_polling" do
+      it "not start polling when poll => false is given" do
         I18n.locale = "de_DE-x-8"
         I18n.backend = ZenEnd.new(:poll => false, :polling_interval => 0.2)
         sleep 0.1
@@ -218,14 +218,14 @@ class I18nBackendHttpTest < Test::Unit::TestCase
         sleep 0.5
       end
 
-      should "update_caches" do
+      it "update_caches" do
         I18n.locale = "de_DE-x-8"
         I18n.backend = ZenEnd.new(:polling_interval => 0.2)
         I18n.backend.expects(:update_caches).twice
         sleep 0.5
       end
 
-      should "stop when calling stop_polling" do
+      it "stop when calling stop_polling" do
         I18n.locale = "de_DE-x-8"
         I18n.backend = ZenEnd.new(:polling_interval => 0.2)
         sleep 0.1
@@ -235,14 +235,14 @@ class I18nBackendHttpTest < Test::Unit::TestCase
       end
     end
 
-    context "#update_caches_via_api" do
-      setup do
+    describe "#update_caches_via_api" do
+      before do
         I18n.locale = "de_DE-x-8"
         I18n.backend = ZenEnd.new
         @key = @existing_key
       end
 
-      should "update translations" do
+      it "update translations" do
         # init it
         with_local_available do
           assert_equal "Am besten", I18n.t(@key)
@@ -260,7 +260,7 @@ class I18nBackendHttpTest < Test::Unit::TestCase
         assert_equal "Am besten", I18n.t(@key)
       end
 
-      should "not update if api did not change" do
+      it "not update if api did not change" do
         VCR.use_cassette("matching_etag") do
           assert_equal "Am besten", I18n.t(@key) # initial request
 
@@ -273,14 +273,14 @@ class I18nBackendHttpTest < Test::Unit::TestCase
         end
       end
 
-      context "with cache" do
-        setup do
+      describe "with cache" do
+        before do
           @key = @existing_key
           @cache = SimpleCache.new
           I18n.backend = ZenEnd.new(:cache => @cache)
         end
 
-        should "update cache" do
+        it "update cache" do
           # init it via cache
           @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
           assert_equal "bar", I18n.t(@key)
@@ -301,7 +301,7 @@ class I18nBackendHttpTest < Test::Unit::TestCase
           assert_equal "Am besten", I18n.t(@key)
         end
 
-        should "pick one server to be the master" do
+        it "pick one server to be the master" do
           @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
           ZenEnd.any_instance.expects(:download_and_cache_translations).twice
           4.times{
@@ -311,7 +311,7 @@ class I18nBackendHttpTest < Test::Unit::TestCase
           sleep 0.7
         end
 
-        should "update all translations known by all clients" do
+        it "update all translations known by all clients" do
           VCR.use_cassette("multiple_locales") do
             @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
             @cache.write "i18n/backend/http/translations/2", {@key => "bar"}
@@ -329,7 +329,7 @@ class I18nBackendHttpTest < Test::Unit::TestCase
           end
         end
 
-        should "updates translations from cache if its a slave" do
+        it "updates translations from cache if its a slave" do
           VCR.use_cassette("matching_etag") do
             @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
             backends = Array.new(4)
