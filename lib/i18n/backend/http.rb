@@ -28,6 +28,10 @@ module I18n
         start_polling if @options[:poll]
       end
 
+      def available_locales
+        @translations.keys.map(&:to_sym).select { |l| l != :i18n }
+      end
+
       def stop_polling
         @stop_polling = true
       end

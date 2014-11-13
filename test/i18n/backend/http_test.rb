@@ -34,7 +34,9 @@ describe I18n::Backend::Http do
 
     # TODO remove conversion
     def lookup(locale, key, scope = [], options = {})
-      locale = locale.to_s[/\d+/].to_i # we only care about the id en-EN-x-ID, everything else could cause duplicate caches
+      locale = locale.to_s[/\d+/].to_s
+
+      # we only care about the id en-EN-x-ID, everything else could cause duplicate caches
       super(locale, key, scope, options)
     end
 
@@ -65,7 +67,7 @@ describe I18n::Backend::Http do
   end
 
   def add_local_change
-    ::I18n.backend.send(:translations, 8)[@key] = "OLD"
+    ::I18n.backend.send(:translations, '8')[@key] = "OLD"
   end
 
   def update_caches
@@ -81,6 +83,23 @@ describe I18n::Backend::Http do
 
     after do
       I18n.backend && I18n.backend.respond_to?(:stop_polling) && I18n.backend.stop_polling
+    end
+
+    describe '#available_locales' do
+      before do
+        I18n.locale = "de_DE-x-8"
+        I18n.backend = ZenEnd.new
+      end
+
+      it "supplies multiple available locales" do
+        VCR.use_cassette("multiple_locales") do
+          # ZenEnd loads locales on-demand: trigger ES and DE
+          I18n.t(@existing_key)
+          I18n.locale = "es_ES-x-2"
+          I18n.t(@existing_key)
+          assert_equal [:'8', :'2'], I18n.available_locales
+        end
+      end
     end
 
     describe "#translate" do
