@@ -6,7 +6,6 @@ require 'i18n/backend/jargon/version'
 require 'i18n/backend/jargon/configuration'
 require 'i18n/backend/jargon/etag_http_client'
 require 'i18n/backend/jargon/null_cache'
-require 'i18n/backend/jargon/lru_cache'
 
 module I18n
   module Backend
@@ -44,7 +43,7 @@ module I18n
 
       def self.init_translations
         @http_client = EtagHttpClient.new(@config)
-        @translations = LRUCache.new(@config[:memory_cache_size])
+        @translations = {}
         start_polling if @config[:poll]
         @initialized = true
       end
