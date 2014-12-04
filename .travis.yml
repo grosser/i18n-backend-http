@@ -1,3 +1,6 @@
-script: "bundle exec rspec"
+script: bundle exec rspec
 rvm:
-  - 2.1.5
+- 2.1.5
+env:
+  global:
+    secure: AM8gHxbEOApgGgLocZl7GDlzDtBpx6Kxnz93hH8R3msBIA7Puf7T4aJIlV4KQnMPmWSi4bYpesp8uDSrlDGBahUcRigVhIq+wRq+fv6C20ETROzKTNqLPjAIK8femChFeEX0yVa8ZDoquMbHQRk2BxjAi1e/0uXEHEW6hlyCd5Q=

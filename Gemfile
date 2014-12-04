@@ -6,3 +6,5 @@ gem 'rake'
 gem 'webmock'
 gem 'appraisal'
 gem 'json'
+
+gem "codeclimate-test-reporter", group: :test, require: nil
