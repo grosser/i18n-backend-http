@@ -11,6 +11,6 @@ VCR.configure do |c|
 end
 
 $LOAD_PATH.unshift 'lib'
-require 'i18n/backend/http'
+require 'i18n/backend/jargon'
 require 'i18n/backend/simple' # is used when I18n first starts
 require 'json'

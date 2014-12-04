@@ -1,7 +1,7 @@
 # encoding: UTF-8
 require File.expand_path('../../../test_helper', __FILE__)
 
-describe I18n::Backend::Http do
+describe I18n::Backend::Jargon do
   class SimpleCache
     def initialize
       @cache = {}
@@ -25,7 +25,7 @@ describe I18n::Backend::Http do
     end
   end
 
-  class ZenEnd < ::I18n::Backend::Http
+  class ZenEnd < ::I18n::Backend::Jargon
     def initialize(options={})
       super({
         :host => "https://support.zendesk.com",
@@ -72,7 +72,7 @@ describe I18n::Backend::Http do
     I18n.backend.send(:update_caches)
   end
 
-  describe "I18n::Backend::Http" do
+  describe "I18n::Backend::Jargon" do
     before do
       @existing_key = "txt.modal.welcome.browsers.best_support"
       @missing_key = "txt.blublublub"

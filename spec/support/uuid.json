@@ -1,0 +1,28 @@
+{
+  "localization": {
+    "id": 1,
+    "name": "Localization 1",
+    "created_at": "2014-11-12T19:10:21.783Z",
+    "updated_at": "2014-11-12T19:10:21.783Z",
+    "available_locales": [
+      "en",
+      "sp"
+    ],
+    "locales": [
+      {
+        "id": 1,
+        "name": "en",
+        "data": {
+          "hello": "Hello"
+        }
+      },
+      {
+        "id": 2,
+        "name": "sp",
+        "data": {
+          "hello": "Hola"
+        }
+      }
+    ]
+  }
+}
