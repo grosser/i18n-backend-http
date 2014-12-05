@@ -1,0 +1,9 @@
+{
+  "locale": {
+    "id": 2,
+    "name": "sp",
+    "data": {
+      "hello": "Hola"
+    }
+  }
+}
