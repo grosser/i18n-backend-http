@@ -13,6 +13,7 @@ module I18n
           @client ||= Faraday.new(@options[:host])
           response = @client.get(path) do |request|
             request.headers["If-None-Match"] = @etags[path] if @etags[path]
+            request.headers["Accept"] = 'application/json'
             request.options[:timeout] = @options[:http_read_timeout]
             request.options[:open_timeout] = @options[:http_open_timeout]
           end

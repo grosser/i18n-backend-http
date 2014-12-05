@@ -3,7 +3,6 @@ require 'i18n/backend/transliterator'
 require 'i18n/backend/base'
 require 'gem_of_thrones'
 require 'i18n/backend/jargon/version'
-require 'i18n/backend/jargon/configuration'
 require 'i18n/backend/jargon/etag_http_client'
 require 'i18n/backend/jargon/null_cache'
 
@@ -11,7 +10,20 @@ module I18n
   module Backend
     class Jargon
       include ::I18n::Backend::Base
-      class << self
+
+      def initialize(options)
+        @config = {
+          host: 'http://localhost',
+          http_open_timeout: 1,
+          http_read_timeout: 1,
+          polling_interval: 10*60,
+          cache: NullCache.new,
+          poll: true,
+          exception_handler: lambda{|e| $stderr.puts e },
+          memory_cache_size: 10
+          }.merge(options)
+          raise ArgumentError if @config[:uuid].nil?
+        end
 
         def initialized?
           @initialized ||= false
@@ -37,7 +49,7 @@ module I18n
         end
 
         def localization_path
-          "api/uuid/#{@config.uuid}"
+          "api/uuid/#{@config[:uuid]}"
         end
 
         def translate(locale, key, options = {})
@@ -50,7 +62,7 @@ module I18n
             count, default = options.values_at(:count, :default)
             values         = options.except(*RESERVED_KEYS)
             entry          = entry.nil? && default ?
-              default(locale, key, default, options) : resolve(locale, key, entry, options)
+            default(locale, key, default, options) : resolve(locale, key, entry, options)
           end
 
           throw(:exception, I18n::MissingTranslation.new(locale, key, options)) if entry.nil?
@@ -89,23 +101,21 @@ module I18n
           return subject if options[:resolve] == false
           result = catch(:exception) do
             case subject
-              when Symbol
-                I18n.translate(subject, options.merge(:locale => locale, :throw => true))
-              when Proc
-                date_or_time = options.delete(:object) || object
-                resolve(locale, object, subject.call(date_or_time, options))
-              else
-                subject
+            when Symbol
+              I18n.translate(subject, options.merge(:locale => locale, :throw => true))
+            when Proc
+              date_or_time = options.delete(:object) || object
+              resolve(locale, object, subject.call(date_or_time, options))
+            else
+              subject
             end
           end
           result unless result.is_a?(MissingTranslation)
         end
 
         def translations(locale)
-          @translations[locale] = (
-          translations_from_cache(locale) ||
-            download_and_cache_translations(locale)
-          )
+          download_and_cache_translations(locale)
+          @translations[locale]
         end
 
         def update_caches
@@ -124,7 +134,7 @@ module I18n
             :cache     => @config[:cache],
             :timeout   => (@config[:polling_interval] * 3).ceil,
             :cache_key => "i18n/backend/http/locked_update_caches/#{locale}"
-          )
+            )
           if aspirant.rise_to_power
             download_and_cache_translations(locale)
           else
@@ -163,6 +173,7 @@ module I18n
 
         def parse_locale(body)
           JSON.load(body)['locale']['data']
+
         end
 
         def parse_localization(body)
