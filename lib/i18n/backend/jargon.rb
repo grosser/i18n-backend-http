@@ -160,9 +160,9 @@ module I18n
             @config[:cache].write(cache_key(locale), translations)
             @translations[locale] = translations
           end
-        rescue => e
-          @config[:exception_handler].call(e)
-          @translations[locale] = {} # do not write distributed cache
+          rescue => e
+            @config[:exception_handler].call(e)
+            @translations[locale] = {} # do not write distributed cache
         end
 
         def download_localization
@@ -172,12 +172,17 @@ module I18n
         end
 
         def parse_locale(body)
-          JSON.load(body)['locale']['data']
-
+          j = JSON.load(body)['locale']['data']
+          flat_hash(j).map{ |k,v| [k.sub(/\.$/, ''), v] }.to_h
         end
 
         def parse_localization(body)
           JSON.load(body)['localization']['available_locales']
+        end
+
+        def flat_hash(hash, k = '')
+          return {k => hash} unless hash.is_a?(Hash)
+          hash.inject({}){ |h, v| h.merge! flat_hash(v[-1], k +v[0].to_s + '.') }
         end
 
         # hook for extension with other resolution method
@@ -187,4 +192,3 @@ module I18n
       end
     end
   end
-end
