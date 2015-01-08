@@ -4,10 +4,9 @@ Very few request, always up to date + fast.
 Install
 =======
 
-    gem install i18n-backend-http
-Or
-
-    rails plugin install git://github.com/grosser/i18n-backend-http.git
+```Bash
+gem install i18n-backend-http
+```
 
 Usage
 =====
@@ -82,4 +81,4 @@ Author
 [Michael Grosser](http://grosser.it)<br/>
 michael@grosser.it<br/>
 License: MIT<br/>
-[![Build Status](https://secure.travis-ci.org/grosser/i18n-backend-http.png)](http://travis-ci.org/grosser/i18n-backend-http)
+[![Build Status](https://travis-ci.org/grosser/i18n-backend-http.png)](https://travis-ci.org/grosser/i18n-backend-http)

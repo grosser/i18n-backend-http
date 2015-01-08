@@ -10,6 +10,7 @@ gem "webmock"
 gem "mocha"
 gem "appraisal"
 gem "json"
+gem "bump"
 gem "i18n"
 
 gemspec :path=>"../"
