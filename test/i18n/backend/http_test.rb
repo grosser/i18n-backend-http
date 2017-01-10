@@ -1,5 +1,9 @@
-# encoding: UTF-8
-require File.expand_path('../../../test_helper', __FILE__)
+require_relative '../../test_helper'
+
+SingleCov.covered! uncovered: 2
+SingleCov.covered! file: 'lib/i18n/backend/http/etag_http_client.rb'
+SingleCov.covered! file: 'lib/i18n/backend/http/lru_cache.rb', uncovered: 1
+SingleCov.covered! file: 'lib/i18n/backend/http/null_cache.rb', uncovered: 1
 
 describe I18n::Backend::Http do
   class SimpleCache
@@ -12,12 +16,16 @@ describe I18n::Backend::Http do
     end
 
     def write(key, value, options={})
-      if not options[:unless_exist] or not @cache[key]
+      if !options[:unless_exist] || !@cache[key]
         @cache[key] = value
       end
     end
 
-    def fetch(key, options={})
+    def delete(key)
+      @cache.delete key
+    end
+
+    def fetch(key, _options={})
       result = read(key)
       return result if result
       result = yield
@@ -74,11 +82,11 @@ describe I18n::Backend::Http do
     I18n.backend.send(:update_caches)
   end
 
-  describe "I18n::Backend::Http" do
+  describe I18n::Backend::Http do
     before do
       @existing_key = "txt.modal.welcome.browsers.best_support"
       @missing_key = "txt.blublublub"
-      Thread.list.each {|thread| thread.exit unless thread == Thread.current } # stop all polling threads
+      Thread.list.each { |thread| thread.exit unless thread == Thread.current } # stop all polling threads
     end
 
     after do
@@ -323,10 +331,10 @@ describe I18n::Backend::Http do
         it "pick one server to be the master" do
           @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
           ZenEnd.any_instance.expects(:download_and_cache_translations).twice
-          4.times{
+          4.times do
             backend = ZenEnd.new(:polling_interval => 0.3, :cache => @cache)
             assert_equal "bar", backend.translate("de-DE-x-8", @key)
-          }
+          end
           sleep 0.7
         end
 
@@ -357,11 +365,11 @@ describe I18n::Backend::Http do
               ZenEnd.new(:polling_interval => 0.3, :cache => @cache)
             end
 
-            translate = lambda{
+            translate = -> do
               backends.map do |backend|
                 backend.translate(I18n.locale, @key)
               end
-            }
+            end
             assert_equal ["bar", "bar", "bar", "bar"], translate.call
 
             sleep 0.8

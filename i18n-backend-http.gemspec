@@ -9,6 +9,15 @@ Gem::Specification.new(name, I18n::Backend::Http::VERSION) do |s|
   s.files = `git ls-files lib`.split("\n")
   s.license = 'MIT'
   s.add_runtime_dependency "i18n"
-  s.add_runtime_dependency "gem_of_thrones"
   s.add_runtime_dependency "faraday"
+  s.add_development_dependency 'rake'
+  s.add_development_dependency 'maxitest'
+  s.add_development_dependency 'vcr', '~> 2.5'
+  s.add_development_dependency 'webmock'
+  s.add_development_dependency 'mocha'
+  s.add_development_dependency 'wwtd'
+  s.add_development_dependency 'json'
+  s.add_development_dependency 'bump'
+  s.add_development_dependency 'single_cov'
+  s.required_ruby_version = '>= 2.0.0'
 end

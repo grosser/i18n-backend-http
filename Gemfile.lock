@@ -3,46 +3,53 @@ PATH
   specs:
     i18n-backend-http (0.1.3)
       faraday
-      gem_of_thrones
       i18n
 
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.2.8)
-    appraisal (0.4.1)
-      bundler
-      rake
+    addressable (2.5.0)
+      public_suffix (~> 2.0, >= 2.0.2)
     bump (0.5.1)
-    crack (0.3.1)
+    crack (0.4.3)
+      safe_yaml (~> 1.0.0)
     faraday (0.9.1)
       multipart-post (>= 1.2, < 3)
-    gem_of_thrones (0.2.2)
+    hashdiff (0.3.2)
     i18n (0.7.0)
-    json (1.7.1)
-    metaclass (0.0.1)
-    minitest (4.1.0)
-    minitest-rg (1.1.0)
-    mocha (0.11.4)
+    json (2.0.2)
+    maxitest (2.4.0)
+      minitest (>= 5.0.0, < 5.11.0)
+    metaclass (0.0.4)
+    minitest (5.10.1)
+    mocha (1.2.1)
       metaclass (~> 0.0.1)
     multipart-post (2.0.0)
+    public_suffix (2.0.5)
     rake (0.9.2)
-    vcr (2.5.0)
-    webmock (1.8.6)
-      addressable (>= 2.2.7)
-      crack (>= 0.1.7)
+    safe_yaml (1.0.4)
+    single_cov (0.5.9)
+    vcr (2.9.3)
+    webmock (2.3.2)
+      addressable (>= 2.3.6)
+      crack (>= 0.3.2)
+      hashdiff
+    wwtd (1.3.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  appraisal
   bump
   i18n-backend-http!
   json
-  minitest (~> 4.1)
-  minitest-rg
+  maxitest
   mocha
   rake
+  single_cov
   vcr (~> 2.5)
   webmock
+  wwtd
+
+BUNDLED WITH
+   1.13.6

@@ -1,11 +1,11 @@
 require 'i18n'
 require 'i18n/backend/transliterator'
 require 'i18n/backend/base'
-require 'gem_of_thrones'
 require 'i18n/backend/http/version'
 require 'i18n/backend/http/etag_http_client'
 require 'i18n/backend/http/null_cache'
 require 'i18n/backend/http/lru_cache'
+require 'socket'
 
 module I18n
   module Backend
@@ -70,17 +70,29 @@ module I18n
       end
 
       def locked_update_cache(locale)
-        @aspirants ||= {}
-        aspirant = @aspirants[locale] ||= GemOfThrones.new(
-          :cache => @options[:cache],
-            :timeout => (@options[:polling_interval] * 3).ceil,
-            :cache_key => "i18n/backend/http/locked_update_caches/#{locale}"
-        )
-        if aspirant.rise_to_power
-          download_and_cache_translations(locale)
-        else
+        unless update_cache(locale) { download_and_cache_translations(locale) }
           update_memory_cache_from_cache(locale)
         end
+      end
+
+      def update_cache(locale)
+        cache = @options.fetch(:cache)
+        key = "i18n/backend/http/locked_update_caches/#{locale}"
+        me = "#{Socket.gethostname}-#{Process.pid}-#{Thread.current.object_id}"
+        if current = cache.read(key)
+          if current == me
+            try = false  # I am responsible, renew expiration
+          else
+            return # someone else is responsible, do not touch
+          end
+        else
+          try = true # nobody is responsible, try to get responsibility
+        end
+
+        return unless cache.write(key, me, expires_in: (@options[:polling_interval] * 3).ceil, unless_exist: try)
+
+        yield
+        true
       end
 
       def update_memory_cache_from_cache(locale)
