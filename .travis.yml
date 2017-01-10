@@ -1,5 +1,15 @@
 script: "bundle exec rake"
 bundler_args: ""
+sudo: false
+cache: bundler
 rvm:
-  - 1.9.3
   - 2.0.0
+  - 2.1.10
+  - 2.2.4
+  - 2.3.3
+  - 2.4.0
+gemfile:
+  - Gemfile
+  - gemfiles/rails3.gemfile
+branches:
+  only: master

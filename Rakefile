@@ -1,14 +1,11 @@
 require 'bundler/setup'
-require 'appraisal'
 require 'bundler/gem_tasks'
 require 'bump/tasks'
-
-task :default do
-  sh "bundle exec rake appraisal:install && bundle exec rake appraisal test"
-end
+require 'wwtd/tasks'
 
 require 'rake/testtask'
-Rake::TestTask.new(:test) do |test|
+Rake::TestTask.new(:default) do |test|
   test.pattern = 'test/**/*_test.rb'
   test.verbose = true
+  test.warning = false
 end
