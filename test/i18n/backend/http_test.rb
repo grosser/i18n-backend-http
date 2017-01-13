@@ -3,7 +3,6 @@ require_relative '../../test_helper'
 SingleCov.covered! uncovered: 2
 SingleCov.covered! file: 'lib/i18n/backend/http/etag_http_client.rb'
 SingleCov.covered! file: 'lib/i18n/backend/http/lru_cache.rb', uncovered: 1
-SingleCov.covered! file: 'lib/i18n/backend/http/null_cache.rb', uncovered: 1
 
 describe I18n::Backend::Http do
   class SimpleCache
@@ -20,23 +19,12 @@ describe I18n::Backend::Http do
         @cache[key] = value
       end
     end
-
-    def delete(key)
-      @cache.delete key
-    end
-
-    def fetch(key, _options={})
-      result = read(key)
-      return result if result
-      result = yield
-      write(key, result)
-    end
   end
 
   class ZenEnd < ::I18n::Backend::Http
     def initialize(options={})
       super({
-        :host => "https://support.zendesk.com",
+        host: "https://support.zendesk.com",
       }.merge(options))
     end
 
@@ -82,6 +70,8 @@ describe I18n::Backend::Http do
     I18n.backend.send(:update_caches)
   end
 
+  let(:version) { '/v2' }
+
   describe I18n::Backend::Http do
     before do
       @existing_key = "txt.modal.welcome.browsers.best_support"
@@ -124,13 +114,13 @@ describe I18n::Backend::Http do
 
       it "translate via api and :scope" do
         with_local_available do
-          assert_equal "Am besten", I18n.t("browsers.best_support", :scope => "txt.modal.welcome")
+          assert_equal "Am besten", I18n.t("browsers.best_support", scope: "txt.modal.welcome")
         end
       end
 
       it "translate via :default" do
         with_local_available do
-          assert_equal "XXX", I18n.t("txt.blublublub", :default => "XXX")
+          assert_equal "XXX", I18n.t("txt.blublublub", default: "XXX")
         end
       end
 
@@ -150,7 +140,7 @@ describe I18n::Backend::Http do
 
       it "fail when I mess up the host" do
         silence_backend
-        I18n.backend = ZenEnd.new(:host => "https://MUAHAHAHAHA.com")
+        I18n.backend = ZenEnd.new(host: "https://MUAHAHAHAHA.com")
         VCR.use_cassette("invalid_host") do
           assert_equal "translation missing: de_DE-x-8.#{@missing_key}", I18n.t(@missing_key).gsub(', ', '.')
         end
@@ -165,9 +155,7 @@ describe I18n::Backend::Http do
 
       it "call :exception_handler when error occurs" do
         exception = nil
-        I18n.backend = ZenEnd.new(:exception_handler => lambda{|e|
-          exception = e
-        })
+        I18n.backend = ZenEnd.new(exception_handler: -> (e) { exception = e })
         $stderr.expects(:puts).never
 
         with_error do
@@ -178,7 +166,7 @@ describe I18n::Backend::Http do
       end
 
       it "keep :memory_cache_size items in memory cache" do
-        I18n.backend = ZenEnd.new(:memory_cache_size => 1)
+        I18n.backend = ZenEnd.new(memory_cache_size: 1)
 
         VCR.use_cassette("multiple_locales") do
           assert_equal "Am besten", I18n.t(@existing_key)
@@ -189,8 +177,8 @@ describe I18n::Backend::Http do
         assert_equal "Mejor", I18n.t(@existing_key) # still in memory
 
         I18n.locale = "de-DE-x-8"
-        I18n.backend.expects(:download_and_cache_translations).returns({})
-        I18n.t(@existing_key) # dropped from memory
+        I18n.backend.expects(:download_translations).returns([{}, nil])
+        I18n.t(@existing_key).must_include "translation missing" # dropped from memory -> fetch
       end
 
       # FIXME how to simulate http timeouts !?
@@ -203,11 +191,11 @@ describe I18n::Backend::Http do
       describe "with cache" do
         before do
           @cache = SimpleCache.new
-          I18n.backend = ZenEnd.new(:cache => @cache)
+          I18n.backend = ZenEnd.new(cache: @cache)
         end
 
         it "loads translations from cache" do
-          @cache.write "i18n/backend/http/translations/8", {"foo" => "bar"}
+          @cache.write "i18n/backend/http/translations/8#{version}", [{"foo" => "bar"}, 'e-tag', Time.now + 10]
           assert_equal "bar", I18n.t("foo")
         end
 
@@ -215,21 +203,21 @@ describe I18n::Backend::Http do
           with_local_available do
             assert_equal "Am besten", I18n.t(@existing_key)
           end
-          assert @cache.read("i18n/backend/http/translations/8")
+          assert @cache.read("i18n/backend/http/translations/8#{version}")
         end
 
-        it "not store invalid responses in cache" do
+        it "stores invalid responses in cache" do
           silence_backend
           with_error do
             assert_equal "translation missing: #{I18n.locale}.#{@existing_key}", I18n.t(@existing_key).gsub(', ', '.')
           end
-          assert !@cache.read("i18n/backend/http/translations/#{I18n.locale.to_s[/\d+/]}")
+          @cache.read("i18n/backend/http/translations/#{I18n.locale.to_s[/\d+/]}#{version}").first.must_equal({})
         end
 
         it "use the memory cache before the cache" do
-          @cache.write "i18n/backend/http/translations/8", {"foo" => "bar"}
+          @cache.write "i18n/backend/http/translations/8#{version}", [{"foo" => "bar"}, 'e-tag', Time.now + 10]
           assert_equal "bar", I18n.t("foo")
-          @cache.write "i18n/backend/http/translations/8", {"foo" => "baZZZ"}
+          @cache.write "i18n/backend/http/translations/8#{version}", [{"foo" => "baZZZ"}, 'e-tag', Time.now + 10]
           assert_equal "bar", I18n.t("foo")
         end
       end
@@ -238,7 +226,7 @@ describe I18n::Backend::Http do
     describe "#start_polling" do
       it "not start polling when poll => false is given" do
         I18n.locale = "de_DE-x-8"
-        I18n.backend = ZenEnd.new(:poll => false, :polling_interval => 0.2)
+        I18n.backend = ZenEnd.new(poll: false, polling_interval: 0.2)
         sleep 0.1
         I18n.backend.expects(:update_caches).never
         I18n.backend.stop_polling
@@ -247,14 +235,14 @@ describe I18n::Backend::Http do
 
       it "update_caches" do
         I18n.locale = "de_DE-x-8"
-        I18n.backend = ZenEnd.new(:polling_interval => 0.2)
+        I18n.backend = ZenEnd.new(polling_interval: 0.2)
         I18n.backend.expects(:update_caches).twice
         sleep 0.5
       end
 
       it "stop when calling stop_polling" do
         I18n.locale = "de_DE-x-8"
-        I18n.backend = ZenEnd.new(:polling_interval => 0.2)
+        I18n.backend = ZenEnd.new(polling_interval: 0.2)
         sleep 0.1
         I18n.backend.expects(:update_caches).once
         I18n.backend.stop_polling
@@ -262,7 +250,7 @@ describe I18n::Backend::Http do
       end
     end
 
-    describe "#update_caches_via_api" do
+    describe "#update_caches" do
       before do
         I18n.locale = "de_DE-x-8"
         I18n.backend = ZenEnd.new
@@ -304,12 +292,29 @@ describe I18n::Backend::Http do
         before do
           @key = @existing_key
           @cache = SimpleCache.new
-          I18n.backend = ZenEnd.new(:cache => @cache)
+          I18n.backend = ZenEnd.new(cache: @cache)
         end
 
-        it "update cache" do
+        it "does not update when values are fresh" do
           # init it via cache
-          @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
+          @cache.write "i18n/backend/http/translations/8#{version}", [{@key => "bar"}, 'E-TAG', Time.now + 10]
+          assert_equal "bar", I18n.t(@key)
+
+          # add a change
+          add_local_change
+          assert_equal "OLD", I18n.t(@key)
+
+          # update via api
+          with_local_available do
+            update_caches
+          end
+
+          assert_equal "OLD", I18n.t(@key)
+        end
+
+        it "update cache hen values are stale" do
+          # init it via cache
+          @cache.write "i18n/backend/http/translations/8#{version}", [{@key => "bar"}, 'E-TAG', Time.now - 10]
           assert_equal "bar", I18n.t(@key)
 
           # add a change
@@ -324,15 +329,15 @@ describe I18n::Backend::Http do
           assert_equal "Am besten", I18n.t(@key)
 
           # loading from cache should have new translations
-          I18n.backend = ZenEnd.new(:cache => @cache)
+          I18n.backend = ZenEnd.new(cache: @cache)
           assert_equal "Am besten", I18n.t(@key)
         end
 
-        it "pick one server to be the master" do
-          @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
-          ZenEnd.any_instance.expects(:download_and_cache_translations).twice
+        it "pick one server to update the cache" do
+          @cache.write "i18n/backend/http/translations/8#{version}", [{@key => "bar"}, 'E-TAG', Time.now - 10]
+          ZenEnd.any_instance.expects(:download_translations).once.returns([{@key => "foo"}, "NEW-TAG"])
           4.times do
-            backend = ZenEnd.new(:polling_interval => 0.3, :cache => @cache)
+            backend = ZenEnd.new(polling_interval: 0.3, cache: @cache)
             assert_equal "bar", backend.translate("de-DE-x-8", @key)
           end
           sleep 0.7
@@ -340,16 +345,17 @@ describe I18n::Backend::Http do
 
         it "update all translations known by all clients" do
           VCR.use_cassette("multiple_locales") do
-            @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
-            @cache.write "i18n/backend/http/translations/2", {@key => "bar"}
+            @cache.write "i18n/backend/http/translations/8#{version}", [{@key => "bar"}, 'E-TAG', Time.now - 10]
+            @cache.write "i18n/backend/http/translations/2#{version}", [{@key => "bar"}, 'E-TAG', Time.now - 10]
 
-            a = ZenEnd.new(:polling_interval => 0.3, :cache => @cache)
-            b = ZenEnd.new(:polling_interval => 0.3, :cache => @cache)
+            a = ZenEnd.new(polling_interval: 0.3, cache: @cache)
+            b = ZenEnd.new(polling_interval: 0.3, cache: @cache)
 
+            # initial fetch from cache ... everything is new so nothing is updated
             assert_equal "bar", a.translate("de-DE-x-8", @key)
             assert_equal "bar", b.translate("es-Es-x-2", @key)
 
-            sleep 0.4 # to refresh vcr: a.stop_polling; b.stop_polling; sleep 10
+            sleep 0.5 # to refresh vcr: a.stop_polling; b.stop_polling; sleep 10
 
             assert_equal "Am besten", a.translate("de-DE-x-8", @key)
             assert_equal "Mejor", b.translate("es-Es-x-2", @key)
@@ -358,11 +364,11 @@ describe I18n::Backend::Http do
 
         it "updates translations from cache if its a slave" do
           VCR.use_cassette("matching_etag") do
-            @cache.write "i18n/backend/http/translations/8", {@key => "bar"}
+            @cache.write "i18n/backend/http/translations/8#{version}", [{@key => "bar"}, 'E-TAG', Time.now - 10]
             backends = Array.new(4)
 
             backends = backends.map do
-              ZenEnd.new(:polling_interval => 0.3, :cache => @cache)
+              ZenEnd.new(polling_interval: 0.3, cache: @cache)
             end
 
             translate = -> do

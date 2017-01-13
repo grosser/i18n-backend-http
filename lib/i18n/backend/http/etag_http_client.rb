@@ -6,22 +6,19 @@ module I18n
       class I18n::Backend::Http::EtagHttpClient
         def initialize(options)
           @options = options
-          @etags = {}
         end
 
-        def download(path)
+        def download(path, etag:)
           @client ||= Faraday.new(@options[:host])
           response = @client.get(path) do |request|
-            request.headers["If-None-Match"] = @etags[path] if @etags[path]
+            request.headers["If-None-Match"] = etag if etag
             request.options[:timeout] = @options[:http_read_timeout]
             request.options[:open_timeout] = @options[:http_open_timeout]
           end
 
-          @etags[path] = response['ETag']
-
           case response.status
-          when 200 then yield response.body
-          when 304
+          when 200 then [response.body, response['ETag']]
+          when 304 then nil
           else
             raise "Failed request: #{response.inspect}"
           end
