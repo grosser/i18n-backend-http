@@ -10,6 +10,7 @@ module I18n
   module Backend
     class Http
       include ::I18n::Backend::Base
+      FAILED_GET = {}.freeze
 
       def initialize(options)
         @options = {
@@ -59,14 +60,15 @@ module I18n
         if cache = @options.fetch(:cache)
           key = cache_key(locale)
           interval = @options.fetch(:polling_interval)
+          now = Time.now # capture time before we do slow work to stay on schedule
           old_value, old_etag, expires_at = cache.read(key) # assumes the cache is more recent then our local storage
 
-          if old_value && (!update || expires_at > Time.now || !updater?(cache, key, interval))
+          if old_value && (!update || expires_at > now || !updater?(cache, key, interval))
             return [old_value, old_etag]
           end
 
           new_value, new_etag = download_translations(locale, etag: old_etag)
-          new_expires_at = Time.now + interval
+          new_expires_at = now + interval
           cache.write(key, [new_value, new_etag, new_expires_at])
           [new_value, new_etag]
         else
@@ -74,6 +76,9 @@ module I18n
         end
       end
 
+      # sync with the cache who is going to update the cache
+      # this overlaps with the expiration interval, so worst case we will get 2x the interval
+      # if all servers are in sync and check updater at the same time
       def updater?(cache, key, interval)
         cache.write(
           "#{key}-lock",
@@ -83,10 +88,12 @@ module I18n
         )
       end
 
+      # when download fails we keep our old caches since they are most likely better then nothing
       def update_caches
         @translations.keys.each do |locale|
           _, old_etag = @translations[locale]
-          if result = fetch_and_update_cached_translations(locale, old_etag, update: true)
+          result = fetch_and_update_cached_translations(locale, old_etag, update: true)
+          if result && result.first != self.class::FAILED_GET
             @translations[locale] = result
           end
         end
@@ -101,7 +108,7 @@ module I18n
         [parse_response(result), etag] if result
       rescue => e
         @options.fetch(:exception_handler).call(e)
-        [{}, nil]
+        [self.class::FAILED_GET, nil]
       end
 
       def parse_response(body)

@@ -275,7 +275,7 @@ describe I18n::Backend::Http do
         assert_equal "Am besten", I18n.t(@key)
       end
 
-      it "not update if api did not change" do
+      it "does not update if api did not change" do
         VCR.use_cassette("matching_etag") do
           assert_equal "Am besten", I18n.t(@key) # initial request
 
@@ -285,6 +285,18 @@ describe I18n::Backend::Http do
           # update -> not modified!
           update_caches
           assert_equal "OLD", I18n.t(@key)
+        end
+      end
+
+      it "does not update if api failed" do
+        with_error do
+          I18n.backend.instance_variable_set(:@translations, {"888888888" => [{@key => "bar"}, "E-TAG"]})
+          assert_equal "bar", I18n.t(@key)
+
+          silence_backend
+          # update -> error -> local cache not modified!
+          update_caches
+          assert_equal "bar", I18n.t(@key)
         end
       end
 
