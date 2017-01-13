@@ -19,5 +19,5 @@ Gem::Specification.new(name, I18n::Backend::Http::VERSION) do |s|
   s.add_development_dependency 'json'
   s.add_development_dependency 'bump'
   s.add_development_dependency 'single_cov'
-  s.required_ruby_version = '>= 2.0.0'
+  s.required_ruby_version = '>= 2.1.0'
 end

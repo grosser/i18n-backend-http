@@ -50,13 +50,13 @@ I18n.t('some.key') == "New value"
 
 ### :cache
 If you pass `cache: Rails.cache`, translations will be loaded from cache and updated in the cache.<br/>
-The cache **MUST** support :unless_exist MemCacheStore + LibmemcachedStore + ActiveSupport::Cache::MemoryStore (edge) work.
+The cache **MUST** support :unless_exist MemCacheStore + LibmemcachedStore + Dalli + ActiveSupport::Cache::MemoryStore (4+) work.
 
 ### Exceptions
 To handle http exceptions provide e.g. `exception_handler: -> (e) { puts e }` (prints to stderr by default).
 
 ### Limited memory cache
-The backend stores the 10 least recently used locales in memory, if you want to mess with this `memory_cache_size: 100`
+The backend stores the 10 least recently used locales in memory, change via `memory_cache_size: 100`
 
 ### Fallback
 If the http backend is down, it does not translate, but also does not constantly try to query -> your app is untranslated but not down.</br>
