@@ -11,6 +11,7 @@ module I18n
         def download(path, etag:)
           @client ||= Faraday.new(@options[:host])
           response = @client.get(path) do |request|
+            request.headers.merge!(@options[:headers]) if @options[:headers]
             request.headers["If-None-Match"] = etag if etag
             request.options[:timeout] = @options[:http_read_timeout]
             request.options[:open_timeout] = @options[:http_open_timeout]
