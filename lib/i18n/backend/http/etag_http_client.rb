@@ -4,9 +4,10 @@ module I18n
   module Backend
     class Http
       class I18n::Backend::Http::EtagHttpClient
+        STATS_NAMESPACE = 'i18n-backend-http.etag_client'.freeze
+
         def initialize(options)
           @options = options
-          @statsd_client = options[:statsd_client]
         end
 
         def download(path, etag:)
@@ -20,7 +21,7 @@ module I18n
             request.options[:open_timeout]   = @options[:http_open_timeout]
           end
 
-          record :timing, time: (Time.now - start).to_i, tags: {path: path}
+          record :timing, time: (Time.now - start).to_f * 1000, tags: {path: path}
 
           case response.status
           when 200
@@ -38,15 +39,15 @@ module I18n
         private
 
         def record(event, options = {})
-          return unless @statsd_client
+          return unless client = @options[:statsd_client]
 
           case event
           when :success
-            @statsd_client.increment('i18n-backend-http.etag_client.success', tags: options[:tags])
+            client.increment("#{STATS_NAMESPACE}.success", tags: options[:tags])
           when :failure
-            @statsd_client.increment('i18n-backend-http.etag_client.failure', tags: options[:tags])
+            client.increment("#{STATS_NAMESPACE}.failure", tags: options[:tags])
           when :timing
-            @statsd_client.histogram('i18n-backend-http.etag_client.request_time', options[:time], tags: options[:tags])
+            client.histogram("#{STATS_NAMESPACE}.request_time", options[:time], tags: options[:tags])
           end
         end
       end
