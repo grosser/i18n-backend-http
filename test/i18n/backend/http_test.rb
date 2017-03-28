@@ -192,6 +192,41 @@ describe I18n::Backend::Http do
         end
       end
 
+      describe "with :statsd_client present" do
+        let(:client) { stub }
+
+        before do
+          I18n.backend = ZenEnd.new(headers: {"Host" => "pod6.zendesk.com"}, statsd_client: client)
+        end
+
+        it "reports on success" do
+          VCR.use_cassette("simple") do
+            client.stubs(:histogram)
+            client.expects(:increment)
+
+            I18n.t(@existing_key)
+          end
+        end
+
+        it "reports on failure" do
+          with_error do
+            client.stubs(:histogram)
+            client.expects(:increment)
+
+            I18n.t(@existing_key)
+          end
+        end
+
+        it "reports request timing" do
+          VCR.use_cassette("simple") do
+            client.stubs(:increment)
+            client.expects(:histogram)
+
+            I18n.t(@existing_key)
+          end
+        end
+      end
+
       # FIXME how to simulate http timeouts !?
       #it "fails when api is slower then set timeout" do
       #  Timeout.timeout 0.8 do

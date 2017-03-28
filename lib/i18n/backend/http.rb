@@ -23,8 +23,10 @@ module I18n
           memory_cache_size: 10,
         }.merge(options)
 
-        @http_client = EtagHttpClient.new(@options)
-        @translations = LRUCache.new(@options[:memory_cache_size])
+        @http_client   = EtagHttpClient.new(@options)
+        @translations  = LRUCache.new(@options[:memory_cache_size])
+        @statsd_client = @options[:statsd_client]
+
         start_polling if @options[:poll]
       end
 
