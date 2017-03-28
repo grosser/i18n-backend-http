@@ -181,6 +181,17 @@ describe I18n::Backend::Http do
         I18n.t(@existing_key).must_include "translation missing" # dropped from memory -> fetch
       end
 
+      it "pass along :headers" do
+        I18n.backend = ZenEnd.new(headers: {"Host" => "pod6.zendesk.com"})
+
+        VCR.use_cassette("custom_headers") do
+          I18n.t(@existing_key)
+
+          # Don't care about the URL, just want to check the headers
+          assert_requested :get, /.*/, headers: {"Host" => "pod6.zendesk.com"}, times: 1
+        end
+      end
+
       # FIXME how to simulate http timeouts !?
       #it "fails when api is slower then set timeout" do
       #  Timeout.timeout 0.8 do
