@@ -1,7 +1,7 @@
 require_relative '../../test_helper'
 
 SingleCov.covered! uncovered: 2
-SingleCov.covered! file: 'lib/i18n/backend/http/etag_http_client.rb'
+SingleCov.covered! file: 'lib/i18n/backend/http/etag_http_client.rb', uncovered: 1
 SingleCov.covered! file: 'lib/i18n/backend/http/lru_cache.rb', uncovered: 1
 
 describe I18n::Backend::Http do

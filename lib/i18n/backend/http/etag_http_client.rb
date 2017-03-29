@@ -21,17 +21,19 @@ module I18n
             request.options[:open_timeout]   = @options[:http_open_timeout]
           end
 
-          record :timing, time: (Time.now - start).to_f * 1000, tags: {path: path}
+          tags = {status_code: response.status, path: path}
+
+          record :timing, time: (Time.now - start).to_f * 1000, tags: tags
 
           case response.status
           when 200
-            record :success, tags: {status_code: response.status, path: path}
+            record :success, tags: tags
             [response.body, response['ETag']]
           when 304
-            record :success, tags: {status_code: response.status, path: path}
+            record :success, tags: tags
             nil
           else
-            record :failure, tags: {status_code: response.status, path: path}
+            record :failure, tags: tags
             raise "Failed request: #{response.inspect}"
           end
         end
@@ -48,6 +50,8 @@ module I18n
             client.increment("#{STATS_NAMESPACE}.failure", tags: options[:tags])
           when :timing
             client.histogram("#{STATS_NAMESPACE}.request_time", options[:time], tags: options[:tags])
+          else
+            raise "Unknown statsd event type to record"
           end
         end
       end
