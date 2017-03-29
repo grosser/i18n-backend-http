@@ -1,7 +1,7 @@
 require_relative '../../test_helper'
 
 SingleCov.covered! uncovered: 2
-SingleCov.covered! file: 'lib/i18n/backend/http/etag_http_client.rb'
+SingleCov.covered! file: 'lib/i18n/backend/http/etag_http_client.rb', uncovered: 1
 SingleCov.covered! file: 'lib/i18n/backend/http/lru_cache.rb', uncovered: 1
 
 describe I18n::Backend::Http do
@@ -189,6 +189,41 @@ describe I18n::Backend::Http do
 
           # Don't care about the URL, just want to check the headers
           assert_requested :get, /.*/, headers: {"Host" => "pod6.zendesk.com"}, times: 1
+        end
+      end
+
+      describe "with :statsd_client present" do
+        let(:client) { stub }
+
+        before do
+          I18n.backend = ZenEnd.new(headers: {"Host" => "pod6.zendesk.com"}, statsd_client: client)
+        end
+
+        it "reports on success" do
+          VCR.use_cassette("simple") do
+            client.stubs(:histogram)
+            client.expects(:increment)
+
+            I18n.t(@existing_key)
+          end
+        end
+
+        it "reports on failure" do
+          with_error do
+            client.stubs(:histogram)
+            client.expects(:increment)
+
+            I18n.t(@existing_key)
+          end
+        end
+
+        it "reports request timing" do
+          VCR.use_cassette("simple") do
+            client.stubs(:increment)
+            client.expects(:histogram)
+
+            I18n.t(@existing_key)
+          end
         end
       end
 
