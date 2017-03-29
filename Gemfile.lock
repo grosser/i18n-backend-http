@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    i18n-backend-http (0.3.1)
+    i18n-backend-http (0.3.2)
       faraday
       i18n
 
