@@ -21,7 +21,7 @@ module I18n
             request.options[:open_timeout]   = @options[:http_open_timeout]
           end
 
-          tags = {status_code: response.status, path: path}
+          tags = ["status_code:#{response.status}", "path:#{path}"]
 
           record :timing, time: (Time.now - start).to_f * 1000, tags: tags
 
