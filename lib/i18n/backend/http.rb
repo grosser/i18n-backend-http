@@ -12,6 +12,7 @@ module I18n
       include ::I18n::Backend::Base
       FAILED_GET = {}.freeze
       STATS_NAMESPACE = 'i18n-backend-http'.freeze
+      ALLOWED_STATS = Set[:download_fail, :open_retry, :read_retry].freeze
 
       def initialize(options)
         @options = {
@@ -150,17 +151,8 @@ module I18n
 
       def record(event, options = {})
         return unless statsd = @options[:statsd_client]
-
-        case event
-        when :download_fail
-          statsd.increment("#{STATS_NAMESPACE}.download_failed", tags: options[:tags])
-        when :open_retry
-          statsd.increment("#{STATS_NAMESPACE}.open_retry", tags: options[:tags])
-        when :read_retry
-          statsd.increment("#{STATS_NAMESPACE}.read_retry", tags: options[:tags])
-        else
-          raise "Unknown statsd event type to record"
-        end
+        raise "Unknown statsd event type to record" unless ALLOWED_STATS.include?(event)
+        statsd.increment("#{STATS_NAMESPACE}.#{event}", tags: options[:tags])
       end
     end
   end
