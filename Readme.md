@@ -19,6 +19,8 @@ class MyBackend < I18n::Backend::Http
       cache: Rails.cache,
       http_open_timeout: 5, # default: 1
       http_read_timeout: 5, # default: 1
+      http_open_retries: 3, # default: 0
+      http_read_retries: 3, # default: 0
       # exception_handler:  lambda{|e| Rails.logger.error e },
       # memory_cache_size: ??, # default: 10 locales
     }.merge(options))

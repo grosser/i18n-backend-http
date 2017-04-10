@@ -1,6 +1,6 @@
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 3
 SingleCov.covered! file: 'lib/i18n/backend/http/etag_http_client.rb', uncovered: 1
 SingleCov.covered! file: 'lib/i18n/backend/http/lru_cache.rb', uncovered: 1
 
@@ -193,16 +193,16 @@ describe I18n::Backend::Http do
       end
 
       describe "with :statsd_client present" do
-        let(:client) { stub }
+        let(:statsd) { stub }
 
         before do
-          I18n.backend = ZenEnd.new(headers: {"Host" => "pod6.zendesk.com"}, statsd_client: client)
+          I18n.backend = ZenEnd.new(headers: {"Host" => "pod6.zendesk.com"}, statsd_client: statsd)
         end
 
         it "reports on success" do
           VCR.use_cassette("simple") do
-            client.stubs(:histogram)
-            client.expects(:increment)
+            statsd.stubs(:histogram)
+            statsd.expects(:increment)
 
             I18n.t(@existing_key)
           end
@@ -210,8 +210,8 @@ describe I18n::Backend::Http do
 
         it "reports on failure" do
           with_error do
-            client.stubs(:histogram)
-            client.expects(:increment)
+            statsd.stubs(:histogram)
+            statsd.expects(:increment).times(2) # once for the HTTP fail, once for the #download_translations failure
 
             I18n.t(@existing_key)
           end
@@ -219,10 +219,62 @@ describe I18n::Backend::Http do
 
         it "reports request timing" do
           VCR.use_cassette("simple") do
-            client.stubs(:increment)
-            client.expects(:histogram)
+            statsd.stubs(:increment)
+            statsd.expects(:histogram)
 
             I18n.t(@existing_key)
+          end
+        end
+      end
+
+      describe 'retrying' do
+        before do
+          I18n.backend = ZenEnd.new(http_open_retries: 3, http_read_retries: 4)
+        end
+
+        it "retries specified number of times for an open timeout" do
+          VCR.use_cassette("simple") do
+            exception = Faraday::ConnectionFailed.new(Net::OpenTimeout.new)
+            I18n::Backend::Http::EtagHttpClient.any_instance.expects(:download).times(4).raises(exception)
+
+            I18n.t(@existing_key)
+          end
+        end
+
+        it "retries specified number of times for a read timeout" do
+          VCR.use_cassette("simple") do
+            exception = Faraday::TimeoutError.new(Net::ReadTimeout.new)
+            I18n::Backend::Http::EtagHttpClient.any_instance.expects(:download).times(5).raises(exception)
+
+            I18n.t(@existing_key)
+          end
+        end
+
+        describe "with a statsd client" do
+          let(:statsd) { stub }
+
+          before do
+            I18n.backend = ZenEnd.new(http_open_retries: 3, http_read_retries: 4, statsd_client: statsd)
+          end
+
+          it "records the open retries to statsd" do
+            VCR.use_cassette("simple") do
+              exception = Faraday::ConnectionFailed.new(Net::OpenTimeout.new)
+              I18n::Backend::Http::EtagHttpClient.any_instance.stubs(:download).raises(exception)
+              statsd.expects(:increment).times(4)
+
+              I18n.t(@existing_key)
+            end
+          end
+
+          it "records the read retries to statsd" do
+            VCR.use_cassette("simple") do
+              exception = Faraday::TimeoutError.new(Net::ReadTimeout.new)
+              I18n::Backend::Http::EtagHttpClient.any_instance.stubs(:download).raises(exception)
+              statsd.expects(:increment).times(5)
+
+              I18n.t(@existing_key)
+            end
           end
         end
       end

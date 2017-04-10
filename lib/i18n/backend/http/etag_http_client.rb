@@ -3,7 +3,7 @@ require 'faraday'
 module I18n
   module Backend
     class Http
-      class I18n::Backend::Http::EtagHttpClient
+      class EtagHttpClient
         STATS_NAMESPACE = 'i18n-backend-http.etag_client'.freeze
 
         def initialize(options)
