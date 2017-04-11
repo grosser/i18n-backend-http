@@ -11,11 +11,15 @@ module I18n
     class Http
       include ::I18n::Backend::Base
       FAILED_GET = {}.freeze
+      STATS_NAMESPACE = 'i18n-backend-http'.freeze
+      ALLOWED_STATS = Set[:download_fail, :open_retry, :read_retry].freeze
 
       def initialize(options)
         @options = {
           http_open_timeout: 1,
           http_read_timeout: 1,
+          http_open_retries: 0,
+          http_read_retries: 0,
           polling_interval: 10*60,
           cache: nil,
           poll: true,
@@ -104,9 +108,14 @@ module I18n
       end
 
       def download_translations(locale, etag:)
-        result, etag = @http_client.download(path(locale), etag: etag)
-        [parse_response(result), etag] if result
+        download_path = path(locale)
+
+        with_retry do
+          result, new_etag = @http_client.download(download_path, etag: etag)
+          [parse_response(result), new_etag] if result
+        end
       rescue => e
+        record(:download_fail, tags: ["exception:#{e.class}", "path:#{download_path}"])
         @options.fetch(:exception_handler).call(e)
         [self.class::FAILED_GET, nil]
       end
@@ -122,6 +131,28 @@ module I18n
       # hook for extension with other resolution method
       def lookup_key(translations, key)
         translations[key]
+      end
+
+      def with_retry
+        open_tries ||= 0
+        read_tries ||= 0
+        yield
+      rescue Faraday::ConnectionFailed => e
+        raise unless e.instance_variable_get(:@wrapped_exception).is_a?(Net::OpenTimeout)
+        raise if (open_tries += 1) > @options[:http_open_retries]
+        record :open_retry
+        retry
+      rescue Faraday::TimeoutError => e
+        raise unless e.instance_variable_get(:@wrapped_exception).is_a?(Net::ReadTimeout)
+        raise if (read_tries += 1) > @options[:http_read_retries]
+        record :read_retry
+        retry
+      end
+
+      def record(event, options = {})
+        return unless statsd = @options[:statsd_client]
+        raise "Unknown statsd event type to record" unless ALLOWED_STATS.include?(event)
+        statsd.increment("#{STATS_NAMESPACE}.#{event}", tags: options[:tags])
       end
     end
   end
